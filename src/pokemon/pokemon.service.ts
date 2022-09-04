@@ -138,7 +138,6 @@ export class PokemonService {
       ExpressionAttributeValues: { ':types': type },
       ProjectionExpression: this.defaultProjectionExpression,
     };
-    console.log(dynamoQuery);
     return this.dynamodb.getByCustomQuery(dynamoQuery);
   }
 

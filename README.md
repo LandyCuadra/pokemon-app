@@ -1,73 +1,208 @@
-<p align="center">
-  <a href="http://nestjs.com/" target="blank"><img src="https://nestjs.com/img/logo-small.svg" width="200" alt="Nest Logo" /></a>
-</p>
-
-[circleci-image]: https://img.shields.io/circleci/build/github/nestjs/nest/master?token=abc123def456
-[circleci-url]: https://circleci.com/gh/nestjs/nest
-
-  <p align="center">A progressive <a href="http://nodejs.org" target="_blank">Node.js</a> framework for building efficient and scalable server-side applications.</p>
-    <p align="center">
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/v/@nestjs/core.svg" alt="NPM Version" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/l/@nestjs/core.svg" alt="Package License" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/dm/@nestjs/common.svg" alt="NPM Downloads" /></a>
-<a href="https://circleci.com/gh/nestjs/nest" target="_blank"><img src="https://img.shields.io/circleci/build/github/nestjs/nest/master" alt="CircleCI" /></a>
-<a href="https://coveralls.io/github/nestjs/nest?branch=master" target="_blank"><img src="https://coveralls.io/repos/github/nestjs/nest/badge.svg?branch=master#9" alt="Coverage" /></a>
-<a href="https://discord.gg/G7Qnnhy" target="_blank"><img src="https://img.shields.io/badge/discord-online-brightgreen.svg" alt="Discord"/></a>
-<a href="https://opencollective.com/nest#backer" target="_blank"><img src="https://opencollective.com/nest/backers/badge.svg" alt="Backers on Open Collective" /></a>
-<a href="https://opencollective.com/nest#sponsor" target="_blank"><img src="https://opencollective.com/nest/sponsors/badge.svg" alt="Sponsors on Open Collective" /></a>
-  <a href="https://paypal.me/kamilmysliwiec" target="_blank"><img src="https://img.shields.io/badge/Donate-PayPal-ff3f59.svg"/></a>
-    <a href="https://opencollective.com/nest#sponsor"  target="_blank"><img src="https://img.shields.io/badge/Support%20us-Open%20Collective-41B883.svg" alt="Support us"></a>
-  <a href="https://twitter.com/nestframework" target="_blank"><img src="https://img.shields.io/twitter/follow/nestframework.svg?style=social&label=Follow"></a>
-</p>
-  <!--[![Backers on Open Collective](https://opencollective.com/nest/backers/badge.svg)](https://opencollective.com/nest#backer)
-  [![Sponsors on Open Collective](https://opencollective.com/nest/sponsors/badge.svg)](https://opencollective.com/nest#sponsor)-->
-
-## Description
-
-[Nest](https://github.com/nestjs/nest) framework TypeScript starter repository.
-
-## Installation
-
-```bash
-$ npm install
+# Basic Pokedex
+_Basic pokedex operations (Synchronize, Add, Update, Get, Filter by Id, Name and Type) sourced from pokeapi.co_
+## Required Installation
+```
+- Node.js V14.x^
+- AWS Account Configured
+```
+## Try out this project local
+```
+git clone https://github.com/LandyCuadra/pokemon-app.git
+```
+```
+cd pokemon-app
+```
+```
+npm install
+```
+```
+touch .env
+```
+## Enviroment File Example
+```
+POKEMON_TABLE_NAME=PokemonTable
+AWS_REGION={YOUR_ACCOUNT_REGION_ID} //example us-east-1
+AWS_KEY_ID={YOUR_ACCOUNT_KEY_ID}
+AWS_SECRET={YOUR_ACCOUNT_SECRET}
+MAX_POKEPROMISES=100 //recomended
+MAX_DBBATCH=25 //maximum
+```
+```
+npm run start
 ```
 
-## Running the app
-
-```bash
-# development
-$ npm run start
-
-# watch mode
-$ npm run start:dev
-
-# production mode
-$ npm run start:prod
+```
+Server starts by in http://localhost:3000
+for future reference {host} = http://localhost:3000
 ```
 
-## Test
+## Endpoints available
 
-```bash
-# unit tests
-$ npm run test
-
-# e2e tests
-$ npm run test:e2e
-
-# test coverage
-$ npm run test:cov
 ```
+POST {host}/pokemon/sync
+```
+retrieve the initial data from pokeapi source to your dynamoDB instance in the table {POKEMON_TABLE_NAME} from .env file
 
-## Support
+* it creates the table {POKEMON_TABLE_NAME} if not created in your DynamoDB instace
+* it overwrites every register from the source you have edited (do not affects the registers you have created)
 
-Nest is an MIT-licensed open source project. It can grow thanks to the sponsors and support by the amazing backers. If you'd like to join them, please [read more here](https://docs.nestjs.com/support).
+```
+POST {host}/pokemon
 
-## Stay in touch
+Body Example:
+{
+    "abilities": [
+        {
+            "isHidden": false,
+            "name": "ability 1",
+            "slot": 1
+        },
+        {
+            "isHidden": false,
+            "name": "ability 2",
+            "slot": 2
+        },
+        {
+            "isHidden": true,
+            "name": "ability 3",
+            "slot": 3
+        }
+    ],
+    "baseExperience": 26,
+    "height": 60,
+    "name": "My super pokemon",
+    "order": 657,
+    "sprite": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/228.png",
+    "stats": [
+        {
+            "baseStat": 100,
+            "effort": 0,
+            "name": "hp"
+        },
+        {
+            "baseStat": 100,
+            "effort": 0,
+            "name": "attack"
+        },
+        {
+            "baseStat": 100,
+            "effort": 0,
+            "name": "defense"
+        },
+        {
+            "baseStat": 100,
+            "effort": 1,
+            "name": "special-attack"
+        },
+        {
+            "baseStat": 100,
+            "effort": 0,
+            "name": "special-defense"
+        },
+        {
+            "baseStat": 100,
+            "effort": 0,
+            "name": "speed"
+        }
+    ],
+    "types": [
+        "dark",
+        "fire"
+    ],
+    "weight": 108
+}
+```
+Add a new record of pokemon to the pokemon table in dynamoDB
 
-- Author - [Kamil Myśliwiec](https://kamilmysliwiec.com)
-- Website - [https://nestjs.com](https://nestjs.com/)
-- Twitter - [@nestframework](https://twitter.com/nestframework)
+```
+PUT {host}/pokemon/{id}
 
-## License
+Body Example:
+{
+    "abilities": [
+        {
+            "isHidden": false,
+            "name": "ability 1",
+            "slot": 1
+        },
+        {
+            "isHidden": false,
+            "name": "ability 2",
+            "slot": 2
+        },
+        {
+            "isHidden": true,
+            "name": "ability 3",
+            "slot": 3
+        }
+    ],
+    "baseExperience": 26,
+    "height": 60,
+    "name": "My super pokemon",
+    "order": 657,
+    "sprite": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/228.png",
+    "stats": [
+        {
+            "baseStat": 100,
+            "effort": 0,
+            "name": "hp"
+        },
+        {
+            "baseStat": 100,
+            "effort": 0,
+            "name": "attack"
+        },
+        {
+            "baseStat": 100,
+            "effort": 0,
+            "name": "defense"
+        },
+        {
+            "baseStat": 100,
+            "effort": 1,
+            "name": "special-attack"
+        },
+        {
+            "baseStat": 100,
+            "effort": 0,
+            "name": "special-defense"
+        },
+        {
+            "baseStat": 100,
+            "effort": 0,
+            "name": "speed"
+        }
+    ],
+    "types": [
+        "dark",
+        "fire"
+    ],
+    "weight": 108
+}
+```
+Edit fields for a record of pokemon that already exists in your dinamoDB
+* you can send partially the fields of the example to update only those fields
+* the data updated will be overwriten by the synchronization operation for records pre-loaded from pokeapi source (this will not affect the records created by you with the creation endpoint)
 
-Nest is [MIT licensed](LICENSE).
+```
+GET {host}/pokemon
+optional params: 
+limit: 10 //default 50
+lastKey: '{ID}'
+```
+retrieve a paginated set of records from the id or pokemon name provided with limited fields
+
+```
+GET {host}/pokemon/type/{type}
+```
+retrieve a record a set of records based on the pokemons type with limited fields
+
+```
+GET {host}/pokemon/{id||name}
+```
+retrieve a record base on its id o name with the full detailed of information'
+
+**Pending
+* validate query and body fields with nest js class validator
+* consider using dynamoose for schema validation and make easier db request
+* add a functional serverless and aws lambda configuration

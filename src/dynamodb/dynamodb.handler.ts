@@ -117,7 +117,6 @@ export class DynamoDBHandler {
   }
 
   getByEqQuery(query: any) {
-    console.log(this.generateFilterQuery(query));
     return this.dynamoDB
       .scan({
         TableName: this.table,
