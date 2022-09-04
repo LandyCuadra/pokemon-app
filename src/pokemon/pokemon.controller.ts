@@ -1,46 +1,46 @@
-import {
-  Controller,
-  Get,
-  Post,
-  Body,
-  Patch,
-  Param,
-  Delete,
-} from '@nestjs/common';
+import { Controller, Get, Post, Body, Param, Query, Put } from '@nestjs/common';
 import { PokemonService } from './pokemon.service';
-import { CreatePokemonDto, UpdatePokemonDto } from './dto/pokemon.dto';
+import {
+  CreatePokemonDto,
+  QueryPokemon,
+  UpdatePokemonDto,
+} from './dto/pokemon.dto';
 
 @Controller('pokemon')
 export class PokemonController {
   constructor(private readonly pokemonService: PokemonService) {}
 
   @Post('sync')
-  sync() {
-    return this.pokemonService.sync();
+  async sync() {
+    await this.pokemonService.sync();
+    return { message: 'synchronized' };
   }
 
   @Post()
-  create(@Body() createPokemonDto: CreatePokemonDto) {
-    return this.pokemonService.create(createPokemonDto);
+  async create(@Body() pokemon: CreatePokemonDto) {
+    const id = await this.pokemonService.create(pokemon);
+    return { message: 'saved', id };
   }
 
   @Get()
-  findAll() {
-    return this.pokemonService.findAll();
+  findAll(@Query() query: QueryPokemon) {
+    const { limit, lastKey } = query;
+    return this.pokemonService.findAll(limit, lastKey);
   }
 
   @Get(':id')
   findOne(@Param('id') id: string) {
-    return this.pokemonService.findOne(+id);
+    return this.pokemonService.findOne(id);
   }
 
-  @Patch(':id')
-  update(@Param('id') id: string, @Body() updatePokemonDto: UpdatePokemonDto) {
-    return this.pokemonService.update(+id, updatePokemonDto);
+  @Get('type/:type')
+  findByType(@Param('type') type: string) {
+    return this.pokemonService.findByType(type);
   }
 
-  @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.pokemonService.remove(+id);
+  @Put(':id')
+  async update(@Param('id') id: string, @Body() pokemon: UpdatePokemonDto) {
+    await this.pokemonService.update(id, pokemon);
+    return { message: 'updated' };
   }
 }

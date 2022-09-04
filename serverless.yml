@@ -8,6 +8,17 @@ plugins:
 provider:
   name: aws
   runtime: nodejs14.x
+  iamRoleStatements:
+    - Effect: 'Allow'
+      Action: 
+        - 'dynamodb:Query'
+        - 'dynamodb:Scan'
+        - 'dynamodb:GetItem'
+        - 'dynamodb:PutItem'
+        - 'dynamodb:UpdateItem'
+        - 'dynamodb:DeleteItem'
+      Resource: 
+        - ${env:POKEMON_TABLE_ARN}
 
 functions:
   main:
@@ -19,3 +30,16 @@ functions:
       - http:
           method: ANY 
           path: '{proxy+}' 
+    dependsOn:
+      - EntityTable
+
+resources:
+  Resources:
+    PokemonTable:
+      Type: AWS::DynamoDB::Table
+      Properties:
+        TableName: ${env:POKEMON_TABLE_NAME} 
+        KeySchema:
+          - AttributeName: id
+            KeyType: S
+        BillingMode: PAY_PER_REQUEST

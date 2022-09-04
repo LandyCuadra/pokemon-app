@@ -7,14 +7,41 @@ import {
   CreatePokemonDto,
   UpdatePokemonDto,
 } from './dto/pokemon.dto';
+const KEY_NAME = 'id';
 
 @Injectable()
 export class PokemonService {
-  constructor(private readonly httpService: HttpService) {}
+  keyName: string;
+  dynamodb: DynamoDBHandler;
+  maxDbBatch: number;
+  maxPokePromises: number;
+  defaultExpressionAttributeNames: any;
+  defaultProjectionExpression: string;
+
+  constructor(private readonly httpService: HttpService) {
+    const { POKEMON_TABLE_NAME, MAX_POKEPROMISES, MAX_DBBATCH } = process.env;
+
+    this.keyName = 'id';
+    this.maxDbBatch = +MAX_DBBATCH;
+    this.maxPokePromises = +MAX_POKEPROMISES;
+    this.keyName = KEY_NAME;
+    this.defaultExpressionAttributeNames = {
+      '#name': 'name',
+      '#order': 'order',
+    };
+    this.defaultProjectionExpression =
+      'id, #name, #order, baseExperience, types';
+    this.dynamodb = new DynamoDBHandler(
+      POKEMON_TABLE_NAME,
+      this.defaultProjectionExpression,
+      this.defaultExpressionAttributeNames,
+    );
+  }
 
   async sync() {
     try {
-      const { POKEMON_TABLE_NAME, MAX_POKEPROMISES, MAX_DBBATCH } = process.env;
+      await this.dynamodb.CreateTable(this.keyName);
+
       const pokemons: Array<ApiPokemonDto> = await lastValueFrom(
         this.httpService
           .get('https://pokeapi.co/api/v2/pokemon?offset=0&limit=1126')
@@ -31,7 +58,7 @@ export class PokemonService {
         );
 
         if (
-          pokePromises.length === parseInt(MAX_POKEPROMISES) ||
+          pokePromises.length === this.maxPokePromises ||
           index + 1 === pokemons.length
         ) {
           const pokemonDetails = await Promise.all(pokePromises);
@@ -65,25 +92,16 @@ export class PokemonService {
                       }),
                     [],
                   ),
-                  types: val.types.reduce(
-                    (acc: any, val: any) =>
-                      acc.concat({
-                        slot: val.slot,
-                        name: val.type.name,
-                      }),
-                    [],
-                  ),
+                  types: val.types.map((typeObj: any) => typeObj.type.name),
                 },
               },
             });
 
             if (
-              acc.length === parseInt(MAX_DBBATCH) ||
+              acc.length === this.maxDbBatch ||
               detailIndex + 1 === pokemonDetails.length
             ) {
-              dynamoPromises.push(
-                new DynamoDBHandler(POKEMON_TABLE_NAME).batchWrite(acc),
-              );
+              dynamoPromises.push(this.dynamodb.batchWrite(acc));
 
               acc = [];
             }
@@ -93,30 +111,38 @@ export class PokemonService {
         }
       }
       await Promise.all(dynamoPromises);
-      console.log(dynamoPromises.length);
     } catch (err) {
       console.log(err);
     }
   }
 
-  create(createPokemonDto: CreatePokemonDto) {
-    return 'This action adds a new pokemon';
+  create(pokemon: CreatePokemonDto) {
+    return this.dynamodb.putItem(this.keyName, pokemon);
   }
 
-  findAll() {
-    console.log(process.env.POKEMON_TABLE_NAME);
-    return new DynamoDBHandler(process.env.POKEMON_TABLE_NAME).get();
+  findAll(limit: number, lastKey: string) {
+    return this.dynamodb.get(limit, { ...(lastKey && { id: lastKey }) });
   }
 
-  findOne(id: number) {
-    return `This action returns a #${id} pokemon`;
+  findOne(id: string) {
+    return this.dynamodb.getByEqQuery({ name: id, id });
   }
 
-  update(id: number, updatePokemonDto: UpdatePokemonDto) {
-    return `This action updates a #${id} pokemon`;
+  findByType(type: string) {
+    const dynamoQuery = {
+      FilterExpression: 'contains(#types, :types)',
+      ExpressionAttributeNames: {
+        '#types': 'types',
+        ...this.defaultExpressionAttributeNames,
+      },
+      ExpressionAttributeValues: { ':types': type },
+      ProjectionExpression: this.defaultProjectionExpression,
+    };
+    console.log(dynamoQuery);
+    return this.dynamodb.getByCustomQuery(dynamoQuery);
   }
 
-  remove(id: number) {
-    return `This action removes a #${id} pokemon`;
+  update(id: string, pokemon: UpdatePokemonDto) {
+    return this.dynamodb.updateItem({ id }, pokemon);
   }
 }
