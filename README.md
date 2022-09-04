@@ -206,3 +206,4 @@ retrieve a record base on its id o name with the full detailed of information'
 * validate query and body fields with nest js class validator
 * consider using dynamoose for schema validation and make easier db request
 * add a functional serverless and aws lambda configuration
+* add testing scripts to ensure the correct backend functionality and ensure error handling 
